@@ -1,14 +1,13 @@
 package com.thinkforge.quiz_service.controller;
 
-import com.thinkforge.quiz_service.dto.CreateQuizRequestDTO;
-import com.thinkforge.quiz_service.dto.QuizDTO;
-import com.thinkforge.quiz_service.dto.UpdateQuizRequestDTO;
+import com.thinkforge.quiz_service.dto.*;
 import com.thinkforge.quiz_service.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -55,6 +54,14 @@ public class QuizController {
 
         quizService.deleteQuiz(quizId);
         return ResponseEntity.ok("Quiz deleted successfully!!");
+
+    }
+
+    @PostMapping("/{quizId}/submit")
+    public ResponseEntity<?> submitQuiz(@PathVariable UUID quizId, @RequestBody QuizSubmissionRequest request) {
+
+        quizService.submitQuiz(quizId, request);
+        return ResponseEntity.ok("Quiz submitted successfully!!");
 
     }
 

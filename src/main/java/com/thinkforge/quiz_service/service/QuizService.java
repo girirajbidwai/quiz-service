@@ -1,17 +1,11 @@
 package com.thinkforge.quiz_service.service;
 
-import com.thinkforge.quiz_service.dto.CreateQuizRequestDTO;
-import com.thinkforge.quiz_service.dto.QuizDTO;
-import com.thinkforge.quiz_service.dto.UpdateQuizRequestDTO;
-import com.thinkforge.quiz_service.entity.Quiz;
-import com.thinkforge.quiz_service.entity.Teacher;
-import com.thinkforge.quiz_service.repository.QuizRepository;
-import com.thinkforge.quiz_service.repository.TeacherRepository;
-import jakarta.transaction.Transactional;
+import com.thinkforge.quiz_service.dto.*;
+import com.thinkforge.quiz_service.entity.*;
+import com.thinkforge.quiz_service.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +19,15 @@ public class QuizService {
 
     @Autowired
     private TeacherRepository teacherRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private QuizStudentEvaluationRepository quizStudentEvaluationRepository;
 
     public UUID createQuiz(CreateQuizRequestDTO request) {
 
@@ -87,6 +90,31 @@ public class QuizService {
     public void deleteQuiz(UUID quizId) {
 
         quizRepository.deleteById(quizId);
+
+    }
+
+    public void submitQuiz(UUID quizId, QuizSubmissionRequest request) {
+
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Cannot find Quiz with quiz id: " + quizId));
+
+        UUID studentId = request.getStudentId();
+
+        for(AnswerDTO answer: request.getAnswers()) {
+
+            Question question = questionRepository.findById(answer.getQuestionId())
+                    .orElseThrow(() -> new RuntimeException("Cannot find Question with question id: " + answer.getQuestionId()));
+
+            QuizStudentEvaluation evaluation = new QuizStudentEvaluation();
+            evaluation.setStudentId(studentId);
+            evaluation.setQuiz(quiz);
+            evaluation.setQuestion(question);
+            evaluation.setSelectedOption(answer.getSelectedOption());
+            evaluation.setSubmittedAt(Timestamp.from(Instant.now()));
+
+            quizStudentEvaluationRepository.save(evaluation);
+
+        }
 
     }
 
