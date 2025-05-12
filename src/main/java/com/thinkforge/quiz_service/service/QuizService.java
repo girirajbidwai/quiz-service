@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -28,6 +29,9 @@ public class QuizService {
 
     @Autowired
     private QuizStudentEvaluationRepository quizStudentEvaluationRepository;
+
+    @Autowired
+    private QuizSubmissionRepository quizSubmissionRepository;
 
     public UUID createQuiz(CreateQuizRequestDTO request) {
 
@@ -100,10 +104,18 @@ public class QuizService {
 
         UUID studentId = request.getStudentId();
 
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Cannot find student with student id: " +  studentId));
+
+        int maxScore = 0, score = 0;
+
         for(AnswerDTO answer: request.getAnswers()) {
 
             Question question = questionRepository.findById(answer.getQuestionId())
                     .orElseThrow(() -> new RuntimeException("Cannot find Question with question id: " + answer.getQuestionId()));
+
+            maxScore++;
+            if(Objects.equals(answer.getSelectedOption(), question.getCorrectOption())) score++;
 
             QuizStudentEvaluation evaluation = new QuizStudentEvaluation();
             evaluation.setStudentId(studentId);
@@ -115,6 +127,15 @@ public class QuizService {
             quizStudentEvaluationRepository.save(evaluation);
 
         }
+
+        QuizSubmission quizSubmission = new QuizSubmission();
+        quizSubmission.setQuiz(quiz);
+        quizSubmission.setStudent(student);
+        quizSubmission.setScore(score);
+        quizSubmission.setMaxScore(maxScore);
+        quizSubmission.setSubmittedAt(Timestamp.from(Instant.now()));
+
+        quizSubmissionRepository.save(quizSubmission);
 
     }
 
