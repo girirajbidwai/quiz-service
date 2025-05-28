@@ -22,7 +22,13 @@ public class QuizController {
 
         UUID quizId = quizService.createQuiz(request);
         return ResponseEntity.ok(quizId);
+    }
 
+    @GetMapping("/generate")
+    public ResponseEntity<List<GetQuestionsDTO>> generateQuiz(@RequestBody CreateQuizRequestDTO request) {
+
+        List<GetQuestionsDTO> quizId = quizService.generateQuiz(request);
+        return ResponseEntity.ok(quizId);
     }
 
     @GetMapping("/{quizId}")

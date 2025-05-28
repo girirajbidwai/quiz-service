@@ -33,6 +33,9 @@ public class QuizService {
     @Autowired
     private QuizSubmissionRepository quizSubmissionRepository;
 
+    @Autowired
+    private QuestionService questionService;
+
     public UUID createQuiz(CreateQuizRequestDTO request) {
 
         UUID teacherId = request.getTeacherId();
@@ -49,6 +52,7 @@ public class QuizService {
         quiz.setDeadline(request.getDeadline());
 
         Quiz response = quizRepository.save(quiz);
+
         return response.getQuizId();
     }
 
@@ -153,5 +157,43 @@ public class QuizService {
     }
 
 
+    public List<GetQuestionsDTO> generateQuiz(CreateQuizRequestDTO request) {
 
+        UUID teacherId = request.getTeacherId();
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Teacher not found with teacher id: " + teacherId));
+
+        Quiz quiz = new Quiz();
+        quiz.setCreatedBy(teacher);
+        quiz.setCreatedAt(Timestamp.from(Instant.now()));
+        quiz.setUpdatedAt(Timestamp.from(Instant.now()));
+        quiz.setSubject(request.getSubject());
+        quiz.setTopic(request.getTopic());
+        quiz.setGrade(request.getGrade());
+        quiz.setDeadline(request.getDeadline());
+
+        Quiz response = quizRepository.save(quiz);
+
+        List<GetQuestionsDTO> questions = questionService.generateQuizQuestion(request.getGrade().toString(), request.getSubject(), request.getTopic(), request.getNumOfQuestions());
+
+        for(GetQuestionsDTO question: questions) {
+
+            Question q = new Question();
+            q.setQuiz(quiz);
+            q.setQuestionText(question.getQuestionText());
+            q.setMarks(question.getMarks());
+            q.setNegativeMarks(question.getNegativeMarks());
+            q.setOptionA(question.getOptionA());
+            q.setOptionB(question.getOptionB());
+            q.setOptionC(question.getOptionC());
+            q.setOptionD(question.getOptionD());
+            q.setCorrectOption(question.getCorrectOption());
+            q.setHint(question.getHint());
+
+            questionRepository.save(q);
+        }
+
+        return questions;
+
+    }
 }
