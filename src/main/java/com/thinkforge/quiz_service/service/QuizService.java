@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -194,6 +195,51 @@ public class QuizService {
         }
 
         return questions;
+
+    }
+
+    public QuizAnalysisByQuizIdResponseDTO getQuizAnalysisByQuiz(UUID quizId) {
+
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
+
+        List<Student> students = studentRepository.findAllByQuiz(quiz);
+
+        List<QuizSubmission> submissions = new ArrayList<QuizSubmission>();
+        QuizAnalysisByQuizIdResponseDTO resposne = new QuizAnalysisByQuizIdResponseDTO();
+        List<QuizAnalysisByQuizIdDTO> studentData = new ArrayList<QuizAnalysisByQuizIdDTO>();
+
+        resposne.setQuizId(quizId);
+        resposne.setStudentData(studentData);
+
+        for(Student student: students) {
+            QuizSubmission submission = quizSubmissionRepository.findByStudentAndQuiz(student, quiz);
+            submissions.add(submission);
+
+            QuizAnalysisByQuizIdDTO dto = new QuizAnalysisByQuizIdDTO();
+            dto.setStudentId(student.getStudentId());
+            dto.setObtainedScore(submission.getScore());
+            dto.setMaxScore(submission.getMaxScore());
+            List<QuizAnalysisByQuizIdQuestionDTO> questionData = new ArrayList<QuizAnalysisByQuizIdQuestionDTO>();
+            dto.setQuestionData(questionData);
+
+            List<QuizStudentEvaluation> evaluations = quizStudentEvaluationRepository.findAllByStudentAndQuiz(student, quiz);
+            for(QuizStudentEvaluation evaluation: evaluations) {
+                Question question = questionRepository.findByEvaluationId(evaluation.getEvaluationId());
+
+                QuizAnalysisByQuizIdQuestionDTO questionDTO = new QuizAnalysisByQuizIdQuestionDTO();
+                questionDTO.setQuestionId(question.getQuestionId());
+                questionDTO.setOptionA(question.getOptionA());
+                questionDTO.setOptionB(question.getOptionB());
+                questionDTO.setOptionC(question.getOptionC());
+                questionDTO.setOptionD(question.getOptionD());
+                questionDTO.setCorrectOption(question.getCorrectOption());
+                questionDTO.setSelectedOption(evaluation.getSelectedOption());
+                questionData.add(questionDTO);
+            }
+        }
+
+        return resposne;
 
     }
 }

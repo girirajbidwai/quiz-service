@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, UUID> {
+    Question findByEvaluationId(UUID evaluationId);
 }

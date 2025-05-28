@@ -71,4 +71,11 @@ public class QuizController {
 
     }
 
+    @GetMapping("/quiz-analysis/{quizId}")
+    public ResponseEntity<?> getQuizAnalysisByQuiz(@PathVariable UUID quizId) {
+
+        QuizAnalysisByQuizIdResponseDTO response = quizService.getQuizAnalysisByQuiz(quizId);
+        return ResponseEntity.ok(response);
+    }
+
 }
