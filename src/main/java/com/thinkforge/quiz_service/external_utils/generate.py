@@ -6,7 +6,7 @@ import traceback
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyD4JMbHJxhtzdoiGiqNGc2QRfPuiSrt37g"
+os.environ["GOOGLE_API_KEY"] = "GOOGLE_API_KEY"
 
 # Fix Unicode print issue
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
