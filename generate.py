@@ -4,15 +4,22 @@ import sys
 import io
 import re
 import traceback
+from dotenv import load_dotenv  # 👈 Load .env in dev environments
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDyS4kixPVf5p6JenhYbDLFo_NVS1AlQiw"
+# Load .env if present
+load_dotenv()
+
+# Get the API key from environment
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GOOGLE_API_KEY:
+    raise EnvironmentError("GEMINI_API_KEY is not set in environment variables")
 
 # Fix Unicode print issue
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Prompt template (unchanged)
+# Prompt template
 template = """
 Generate {num_questions} multiple-choice questions (MCQs) for grade {grade} on the subject "{subject}" and topic "{topic}".
 
@@ -46,7 +53,11 @@ prompt = PromptTemplate(
     template=template
 )
 
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash",
+    temperature=0.7,
+    google_api_key=GOOGLE_API_KEY
+)
 chain = prompt | llm
 
 def generate_quiz(grade, subject, topic, num_questions):
@@ -62,9 +73,6 @@ def generate_quiz(grade, subject, topic, num_questions):
     if not output.strip():
         raise ValueError("Gemini returned an empty response.")
 
-    # -----------------------------------------------------------
-    # 1) Strip away any Markdown fences (```json …``` or ``````)
-    # -----------------------------------------------------------
     cleaned_output = output.strip()
     if cleaned_output.startswith("```json"):
         cleaned_output = cleaned_output.removeprefix("```json").removesuffix("```").strip()
@@ -72,52 +80,35 @@ def generate_quiz(grade, subject, topic, num_questions):
         cleaned_output = cleaned_output.removeprefix("```").removesuffix("```").strip()
 
     try:
-        # -----------------------------------------------------------
-        # 2) Fix unquoted values so json.loads() will succeed:
-        #    a) Wrap any bare-integer option in quotes
-        #    b) Insert missing leading quote for textual options
-        # -----------------------------------------------------------
-        # 2a) Wrap bare integers in quotes
         cleaned_output = re.sub(
             r'("option[ABCD]": )(-?\d+)([,\n])',
             r'\1"\2"\3',
             cleaned_output
         )
-
-        # 2b) Insert missing leading quote for textual options
         cleaned_output = re.sub(
             r'("option[ABCD]": )([^"\n][^"]*?)(",)',
             r'\1"\2"\3',
             cleaned_output
         )
 
-        # Parse into Python objects
         parsed = json.loads(cleaned_output)
 
-        # -----------------------------------------------------------
-        # 3) Unwrap any optionX that is still a JSON-string like "{\"text\": \"…\"}"
-        #    → replace it with the inner "…"
-        # -----------------------------------------------------------
         for question in parsed:
             for key in ("optionA", "optionB", "optionC", "optionD"):
                 raw = question.get(key)
                 if isinstance(raw, str):
                     candidate = raw.strip()
-                    # If it looks like a JSON object string, parse and extract "text"
                     if candidate.startswith("{") and candidate.endswith("}"):
                         try:
                             inner = json.loads(candidate)
-                            # If there is a "text" field, replace the value
                             if isinstance(inner, dict) and "text" in inner:
                                 question[key] = inner["text"]
                         except json.JSONDecodeError:
-                            # Leave it as-is if it isn’t valid JSON
                             pass
 
         return parsed
 
     except json.JSONDecodeError as e:
-        # For debugging: print raw + cleaned
         print("JSON parsing failed:", e)
         print("=== RAW OUTPUT ===\n", output)
         print("=== CLEANED OUTPUT (after regex) ===\n", cleaned_output)
@@ -131,7 +122,6 @@ if __name__ == "__main__":
         num_questions = sys.argv[4]
 
         result = generate_quiz(grade, subject, topic, num_questions)
-        # Print final JSON with plain strings for optionA–D
         print(json.dumps(result, indent=2, ensure_ascii=False))
     except Exception as e:
         print("ERROR:", str(e))
