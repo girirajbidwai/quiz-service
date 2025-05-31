@@ -1,6 +1,7 @@
 package com.thinkforge.quiz_service.controller;
 
 import com.thinkforge.quiz_service.dto.*;
+import com.thinkforge.quiz_service.entity.Quiz;
 import com.thinkforge.quiz_service.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,12 @@ public class QuizController {
 
         UUID quizId = quizService.createQuiz(request);
         return ResponseEntity.ok(quizId);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<QuizDTO>> getAllQuiz() {
+
+        return ResponseEntity.ok(quizService.getAllQuiz());
     }
 
     @GetMapping("/generate")

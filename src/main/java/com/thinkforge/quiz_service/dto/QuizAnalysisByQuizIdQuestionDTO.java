@@ -13,4 +13,6 @@ public class QuizAnalysisByQuizIdQuestionDTO {
     private String optionD;
     private String selectedOption;
     private String correctOption;
+
+
 }

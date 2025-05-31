@@ -57,6 +57,16 @@ public class QuizService {
         return response.getQuizId();
     }
 
+    public List<QuizDTO> getAllQuiz() {
+
+        List<Quiz> quizList = quizRepository.findAll();
+
+        return quizList.stream()
+                .map(QuizService::QuiztoQuizDTO)
+                .toList();
+
+    }
+
     public QuizDTO getQuizByQuizId(UUID quizId) {
 
         Quiz quiz = quizRepository.findById(quizId)
@@ -199,47 +209,45 @@ public class QuizService {
     }
 
     public QuizAnalysisByQuizIdResponseDTO getQuizAnalysisByQuiz(UUID quizId) {
-
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
 
-        List<Student> students = studentRepository.findAllByQuiz(quiz);
+        List<QuizSubmission> submissions = quizSubmissionRepository.findAllByQuiz(quiz);
 
-        List<QuizSubmission> submissions = new ArrayList<QuizSubmission>();
-        QuizAnalysisByQuizIdResponseDTO resposne = new QuizAnalysisByQuizIdResponseDTO();
-        List<QuizAnalysisByQuizIdDTO> studentData = new ArrayList<QuizAnalysisByQuizIdDTO>();
+        QuizAnalysisByQuizIdResponseDTO response = new QuizAnalysisByQuizIdResponseDTO();
+        response.setQuizId(quizId);
 
-        resposne.setQuizId(quizId);
-        resposne.setStudentData(studentData);
+        List<QuizAnalysisByQuizIdDTO> studentData = new ArrayList<>();
 
-        for(Student student: students) {
-            QuizSubmission submission = quizSubmissionRepository.findByStudentAndQuiz(student, quiz);
-            submissions.add(submission);
-
+        for (QuizSubmission submission : submissions) {
             QuizAnalysisByQuizIdDTO dto = new QuizAnalysisByQuizIdDTO();
-            dto.setStudentId(student.getStudentId());
+            dto.setStudentId(submission.getStudent().getStudentId());
             dto.setObtainedScore(submission.getScore());
             dto.setMaxScore(submission.getMaxScore());
-            List<QuizAnalysisByQuizIdQuestionDTO> questionData = new ArrayList<QuizAnalysisByQuizIdQuestionDTO>();
-            dto.setQuestionData(questionData);
 
-            List<QuizStudentEvaluation> evaluations = quizStudentEvaluationRepository.findAllByStudentAndQuiz(student, quiz);
-            for(QuizStudentEvaluation evaluation: evaluations) {
-                Question question = questionRepository.findByEvaluationId(evaluation.getEvaluationId());
+            List<QuizAnalysisByQuizIdQuestionDTO> questionData = new ArrayList<>();
+            List<QuizStudentEvaluation> evaluations = quizStudentEvaluationRepository
+                    .findAllByStudentIdAndQuiz(submission.getStudent().getStudentId(), quiz);
 
+            for (QuizStudentEvaluation evaluation : evaluations) {
                 QuizAnalysisByQuizIdQuestionDTO questionDTO = new QuizAnalysisByQuizIdQuestionDTO();
-                questionDTO.setQuestionId(question.getQuestionId());
-                questionDTO.setOptionA(question.getOptionA());
-                questionDTO.setOptionB(question.getOptionB());
-                questionDTO.setOptionC(question.getOptionC());
-                questionDTO.setOptionD(question.getOptionD());
-                questionDTO.setCorrectOption(question.getCorrectOption());
+                questionDTO.setQuestionId(evaluation.getQuestion().getQuestionId());
+                questionDTO.setOptionA(evaluation.getQuestion().getOptionA());
+                questionDTO.setOptionB(evaluation.getQuestion().getOptionB());
+                questionDTO.setOptionC(evaluation.getQuestion().getOptionC());
+                questionDTO.setOptionD(evaluation.getQuestion().getOptionD());
                 questionDTO.setSelectedOption(evaluation.getSelectedOption());
+                questionDTO.setCorrectOption(evaluation.getQuestion().getCorrectOption());
+
                 questionData.add(questionDTO);
             }
+
+            dto.setQuestionData(questionData);
+            studentData.add(dto);
         }
 
-        return resposne;
-
+        response.setStudentData(studentData);
+        return response;
     }
+
 }
