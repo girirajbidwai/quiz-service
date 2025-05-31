@@ -1,6 +1,6 @@
 # 🧠 Quiz Generation Service using Spring Boot + Gemini API
 
-Welcome to the **Quiz Generation Microservice** — an AI-powered quiz creation platform that dynamically generates multiple-choice questions (MCQs) using Google's Gemini (via LangChain), driven by user inputs like grade, subject, and topic. Built with **Spring Boot**, **PostgreSQL**, and a powerful **Python backend**, the service is containerized with Docker and ready for production deployment.
+Welcome to the **AI Quiz Generation Microservice** — an AI-powered quiz creation platform that dynamically generates multiple-choice questions (MCQs) using Google's Gemini (via LangChain), driven by user inputs like grade, subject, and topic. Built with **Spring Boot**, **PostgreSQL**, and a powerful **Python backend**, the service is containerized with Docker and ready for production deployment.
 
 ---
 
@@ -10,9 +10,9 @@ Welcome to the **Quiz Generation Microservice** — an AI-powered quiz creation 
 - ✅ Clean REST API with Spring Boot 3.4+
 - 🐘 PostgreSQL integration via Supabase
 - 🐳 Fully Dockerized build and runtime
-- 🔐 Environment-variable based secrets management (`.env` + Render + Docker)
+- 🔐 Environment-variable based secrets management (`.env` + Railway + Docker)
 - 📦 Clean Maven project structure with Lombok, validation, and test support
-- 🌐 Deployed & tested on [Render.com](https://render.com)
+- 🌐 Deployed & tested on [Railway.com](https://railway.com)
 
 ---
 
@@ -26,7 +26,7 @@ Welcome to the **Quiz Generation Microservice** — an AI-powered quiz creation 
 | Build Tool   | Maven                                 |
 | Dependency   | Lombok, Validation, LangChain         |
 | Container    | Docker (multi-stage build)            |
-| Deployment   | Render.com                            |
+| Deployment   | Railway.com                            |
 
 ---
 
@@ -54,7 +54,7 @@ quiz-service/
 
 ## 🔐 Environment Variables
 
-Configure these securely via `.env` (dev) or Render's environment tab:
+Configure these securely via `.env` (dev) or Railway's environment tab:
 
 ```
 GEMINI_API_KEY=your_gemini_api_key
@@ -72,7 +72,7 @@ DATABASE_PASSWORD=your_db_pass
 ### 🖥️ 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/quiz-service.git
+git clone https://github.com/Arghya-Banerjee/quiz-service.git
 cd quiz-service
 ```
 
@@ -151,7 +151,7 @@ Content-Type: application/json
 
 ## 🙏 Credits
 
-- Built with ❤️ by [Your Name](https://github.com/your-username)
+- Built with ❤️ by [Arghya-Banerjee](https://github.com/Arghya-Banerjee)
 - Powered by [Google Gemini](https://ai.google.dev/)
 - Inspired by real classroom needs for auto-assessment
 
