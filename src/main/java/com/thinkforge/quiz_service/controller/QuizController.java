@@ -1,14 +1,12 @@
 package com.thinkforge.quiz_service.controller;
 
 import com.thinkforge.quiz_service.dto.*;
-import com.thinkforge.quiz_service.entity.Quiz;
 import com.thinkforge.quiz_service.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -18,20 +16,13 @@ public class QuizController {
     @Autowired
     private QuizService quizService;
 
-    @GetMapping("/create")
-    public ResponseEntity<UUID> createQuiz(@RequestBody CreateQuizRequestDTO request) {
-
-        UUID quizId = quizService.createQuiz(request);
-        return ResponseEntity.ok(quizId);
-    }
-
     @GetMapping("/all")
     public ResponseEntity<List<QuizDTO>> getAllQuiz() {
 
         return ResponseEntity.ok(quizService.getAllQuiz());
     }
 
-    @GetMapping("/generate")
+    @PostMapping("/generate")
     public ResponseEntity<List<GetQuestionsDTO>> generateQuiz(@RequestBody CreateQuizRequestDTO request) {
 
         List<GetQuestionsDTO> quizId = quizService.generateQuiz(request);

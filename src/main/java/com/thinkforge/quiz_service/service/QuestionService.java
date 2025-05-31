@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Service
@@ -18,13 +19,17 @@ public class QuestionService {
         List<GetQuestionsDTO> questions = null;
 
         try {
+            // Now that generate.py is in the root folder, use a direct path
+            String scriptPath = Paths.get("generate.py").toString();
+
             ProcessBuilder pb = new ProcessBuilder(
-                    "d:\\SpringBoot\\quiz-service\\src\\main\\java\\com\\thinkforge\\quiz_service\\external_utils\\.venv\\Scripts\\python.exe",
-                    "d:\\SpringBoot\\quiz-service\\src\\main\\java\\com\\thinkforge\\quiz_service\\external_utils\\generate.py",
+                    "python",
+                    scriptPath,
                     grade, subject, topic, String.valueOf(numQuestions)
             );
 
             pb.redirectErrorStream(true);
+            pb.directory(new java.io.File(".")); // Ensures it runs from root/project working dir
 
             Process process = pb.start();
 
@@ -32,29 +37,24 @@ public class QuestionService {
             StringBuilder jsonBuilder = new StringBuilder();
             String line;
 
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 jsonBuilder.append(line);
             }
 
-            int exitCode =  process.waitFor();
-            if(exitCode == 0) {
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
                 String json = jsonBuilder.toString();
                 ObjectMapper objectMapper = new ObjectMapper();
                 questions = objectMapper.readValue(json, new TypeReference<>() {});
-            }
-            else {
+            } else {
                 System.err.println("Python script failed with exit code: " + exitCode);
-                System.err.println("Script output:\n" + jsonBuilder.toString());  // Print what Python printed
+                System.err.println("Script output:\n" + jsonBuilder.toString());
                 throw new RuntimeException("Python script failed with exit code: " + exitCode);
-
             }
-        }
-        catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Failed to call Python script: ", e);
         }
 
         return questions;
-
     }
-
 }

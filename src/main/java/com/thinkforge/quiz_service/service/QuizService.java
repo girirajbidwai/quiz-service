@@ -37,26 +37,6 @@ public class QuizService {
     @Autowired
     private QuestionService questionService;
 
-    public UUID createQuiz(CreateQuizRequestDTO request) {
-
-        UUID teacherId = request.getTeacherId();
-        Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with teacher id: " + teacherId));
-
-        Quiz quiz = new Quiz();
-        quiz.setCreatedBy(teacher);
-        quiz.setCreatedAt(Timestamp.from(Instant.now()));
-        quiz.setUpdatedAt(Timestamp.from(Instant.now()));
-        quiz.setSubject(request.getSubject());
-        quiz.setTopic(request.getTopic());
-        quiz.setGrade(request.getGrade());
-        quiz.setDeadline(request.getDeadline());
-
-        Quiz response = quizRepository.save(quiz);
-
-        return response.getQuizId();
-    }
-
     public List<QuizDTO> getAllQuiz() {
 
         List<Quiz> quizList = quizRepository.findAll();
