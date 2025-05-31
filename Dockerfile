@@ -10,10 +10,10 @@ COPY mvnw .
 COPY .mvn/ .mvn/
 COPY pom.xml .
 
-# Prepare Maven dependencies
+# Download dependencies
 RUN chmod +x mvnw && ./mvnw dependency:go-offline
 
-# Copy source and build JAR
+# Copy source and build the application
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
@@ -23,29 +23,32 @@ RUN ./mvnw clean package -DskipTests
 # ===============================
 FROM eclipse-temurin:21-jre
 
-# Set working directory
 WORKDIR /app
 
-# Install Python and create venv
+# Install Python and setup venv
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 python3-pip python3-venv && \
     rm -rf /var/lib/apt/lists/*
 
-# Create Python virtual environment
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy Python files
+# Copy Python scripts
 COPY generate.py .
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy JAR from builder stage
+# Copy built Spring Boot JAR from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Create non-root user with known UID/GID (e.g., required by Choreo)
+# Set environment variables (⚠️ Replace with --env-file or docker run -e for secrets in production)
+ENV DATABASE_URL=jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres
+ENV DATABASE_USERNAME=postgres.xcxgjwhboudprgswfynp
+ENV DATABASE_PASSWORD=Thinkforge@11
+
+# Create non-root user (required by some cloud platforms like Choreo)
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -55,11 +58,10 @@ RUN adduser \
     --uid 10014 \
     choreo
 
-# Switch to unprivileged user
 USER 10014
 
-# Expose application port
+# Expose Spring Boot port
 EXPOSE 8080
 
-# Run the Spring Boot application
+# Start Spring Boot application
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
