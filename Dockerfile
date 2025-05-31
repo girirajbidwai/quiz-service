@@ -5,12 +5,15 @@ FROM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
 
+# Copy Maven wrapper and project files
 COPY mvnw .
 COPY .mvn/ .mvn/
 COPY pom.xml .
 
+# Prepare Maven dependencies
 RUN chmod +x mvnw && ./mvnw dependency:go-offline
 
+# Copy source and build JAR
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
@@ -20,29 +23,43 @@ RUN ./mvnw clean package -DskipTests
 # ===============================
 FROM eclipse-temurin:21-jre
 
-# Install Python and venv
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv && \
-    apt-get clean
-
+# Set working directory
 WORKDIR /app
 
-# Set up virtual environment for Python
+# Install Python and create venv
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3 python3-pip python3-venv && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create Python virtual environment
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy Python script and requirements.txt (both are now in root)
+# Copy Python files
 COPY generate.py .
 COPY requirements.txt .
 
-# Install Python dependencies inside the virtual environment
-RUN pip install -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy built JAR from build stage
+# Copy JAR from builder stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Expose app port
+# Create non-root user with known UID/GID (e.g., required by Choreo)
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid 10014 \
+    choreo
+
+# Switch to unprivileged user
+USER 10014
+
+# Expose application port
 EXPOSE 8080
 
-# Run Spring Boot application
+# Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
