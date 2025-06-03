@@ -10,70 +10,78 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/quiz/")
+@RequestMapping("/api/v1/quiz")
 public class QuizController {
 
     @Autowired
     private QuizService quizService;
 
-    @GetMapping("/all")
-    public ResponseEntity<List<QuizDTO>> getAllQuiz() {
+    // ---------- Quiz Metadata ----------
 
+    @GetMapping
+    public ResponseEntity<List<QuizMetadataDTO>> getAllQuiz() {
         return ResponseEntity.ok(quizService.getAllQuiz());
     }
 
-    @PostMapping("/generate")
-    public ResponseEntity<List<GetQuestionsDTO>> generateQuiz(@RequestBody CreateQuizRequestDTO request) {
-
-        List<GetQuestionsDTO> quizId = quizService.generateQuiz(request);
-        return ResponseEntity.ok(quizId);
-    }
-
     @GetMapping("/{quizId}")
-    public ResponseEntity<QuizDTO> getQuizByQuizId(@PathVariable UUID quizId) {
-
-        QuizDTO quiz = quizService.getQuizByQuizId(quizId);
-        return ResponseEntity.ok(quiz);
-
+    public ResponseEntity<QuizMetadataDTO> getQuizById(@PathVariable UUID quizId) {
+        return ResponseEntity.ok(quizService.getQuizByQuizId(quizId));
     }
 
     @GetMapping("/teacher/{teacherId}")
-    public ResponseEntity<List<QuizDTO>> getQuizByTeacherId(@PathVariable UUID teacherId) {
+    public ResponseEntity<List<QuizMetadataDTO>> getQuizByTeacherId(@PathVariable UUID teacherId) {
+        return ResponseEntity.ok(quizService.getQuizByTeacherId(teacherId));
+    }
 
-        List<QuizDTO> quizList = quizService.getQuizByTeacherId(teacherId);
-        return ResponseEntity.ok(quizList);
-
+    @PostMapping("/generate")
+    public ResponseEntity<List<GeneratedQuestionsDTO>> generateQuiz(@RequestBody CreateQuizRequestDTO request) {
+        return ResponseEntity.ok(quizService.generateQuiz(request));
     }
 
     @PutMapping("/{quizId}")
-    public ResponseEntity<QuizDTO> updateQuiz(@PathVariable UUID quizId, @RequestBody UpdateQuizRequestDTO request) {
-
-        QuizDTO quiz = quizService.updateQuiz(quizId, request);
-        return ResponseEntity.ok(quiz);
-
+    public ResponseEntity<QuizMetadataDTO> updateQuiz(
+            @PathVariable UUID quizId,
+            @RequestBody UpdateQuizRequestDTO request) {
+        return ResponseEntity.ok(quizService.updateQuiz(quizId, request));
     }
 
     @DeleteMapping("/{quizId}")
     public ResponseEntity<String> deleteQuiz(@PathVariable UUID quizId) {
-
         quizService.deleteQuiz(quizId);
-        return ResponseEntity.ok("Quiz deleted successfully!!");
-
+        return ResponseEntity.ok("Quiz deleted successfully");
     }
+
+    // ---------- Quiz Submission ----------
 
     @PostMapping("/{quizId}/submit")
-    public ResponseEntity<?> submitQuiz(@PathVariable UUID quizId, @RequestBody QuizSubmissionRequest request) {
-
+    public ResponseEntity<String> submitQuiz(
+            @PathVariable UUID quizId,
+            @RequestBody QuizSubmissionRequestDTO request) {
         quizService.submitQuiz(quizId, request);
-        return ResponseEntity.ok("Quiz submitted successfully!!");
-
+        return ResponseEntity.ok("Quiz submitted successfully");
     }
 
-    @GetMapping("/quiz-analysis/{quizId}")
-    public ResponseEntity<?> getQuizAnalysisByQuiz(@PathVariable UUID quizId) {
-
-        QuizAnalysisByQuizIdResponseDTO response = quizService.getQuizAnalysisByQuiz(quizId);
-        return ResponseEntity.ok(response);
+    @GetMapping("/{quizId}/submissions")
+    public ResponseEntity<List<QuizSubmissionAnalysisDTO>> getAllSubmissions(@PathVariable UUID quizId) {
+        return ResponseEntity.ok(quizService.getAllSubmissionsForQuiz(quizId));
     }
 
+    @GetMapping("/{quizId}/submission/{studentId}")
+    public ResponseEntity<StudentQuizAnalysisDTO> getStudentSubmission(
+            @PathVariable UUID quizId,
+            @PathVariable UUID studentId) {
+        return ResponseEntity.ok(quizService.getSubmissionForQuiz(studentId, quizId));
+    }
+
+    // ---------- Analysis & Status ----------
+
+    @GetMapping("/{quizId}/analysis")
+    public ResponseEntity<QuizAnalysisResponseDTO> getQuizAnalysis(@PathVariable UUID quizId) {
+        return ResponseEntity.ok(quizService.getQuizAnalysisByQuiz(quizId));
+    }
+
+    @GetMapping("/{quizId}/status")
+    public ResponseEntity<QuizStatusDTO> getQuizStatus(@PathVariable UUID quizId) {
+        return ResponseEntity.ok(quizService.getQuizStatus(quizId));
+    }
 }

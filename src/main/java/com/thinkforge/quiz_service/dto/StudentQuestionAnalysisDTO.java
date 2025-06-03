@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class QuizAnalysisByQuizIdQuestionDTO {
+public class StudentQuestionAnalysisDTO {
     private UUID questionId;
     private String optionA;
     private String optionB;

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class QuizAnalysisByQuizIdResponseDTO {
+public class QuizAnalysisResponseDTO {
     private UUID quizId;
-    List<QuizAnalysisByQuizIdDTO> studentData;
+    List<StudentQuizAnalysisDTO> studentData;
 }

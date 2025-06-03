@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class QuizSubmissionRequest {
+public class QuizSubmissionRequestDTO {
 
     private UUID studentId;
     private List<AnswerDTO> answers;

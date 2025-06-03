@@ -3,8 +3,6 @@ package com.thinkforge.quiz_service.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
 import java.util.UUID;
