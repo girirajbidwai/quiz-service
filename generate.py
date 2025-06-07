@@ -54,7 +54,7 @@ prompt = PromptTemplate(
 )
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-2.0-flash",
     temperature=0.7,
     google_api_key=GOOGLE_API_KEY
 )
@@ -95,16 +95,13 @@ def generate_quiz(grade, subject, topic, num_questions):
 
         for question in parsed:
             for key in ("optionA", "optionB", "optionC", "optionD"):
-                raw = question.get(key)
-                if isinstance(raw, str):
-                    candidate = raw.strip()
-                    if candidate.startswith("{") and candidate.endswith("}"):
-                        try:
-                            inner = json.loads(candidate)
-                            if isinstance(inner, dict) and "text" in inner:
-                                question[key] = inner["text"]
-                        except json.JSONDecodeError:
-                            pass
+                val = question.get(key)
+                if isinstance(val, str):
+                    val = val.strip()
+                    if val.startswith('"') and val.endswith('"'):
+                        val = val[1:-1]
+                    val = val.replace('\\"', '"')
+                    question[key] = val
 
         return parsed
 

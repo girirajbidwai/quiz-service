@@ -2,6 +2,7 @@ package com.thinkforge.quiz_service.service;
 
 import com.thinkforge.quiz_service.dto.*;
 import com.thinkforge.quiz_service.entity.*;
+import com.thinkforge.quiz_service.exception.*;
 import com.thinkforge.quiz_service.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,43 +39,26 @@ public class QuizService {
     private QuestionService questionService;
 
     public List<QuizMetadataDTO> getAllQuiz() {
-
         List<Quiz> quizList = quizRepository.findAll();
-
-        return quizList.stream()
-                .map(QuizService::QuiztoQuizDTO)
-                .toList();
-
+        return quizList.stream().map(QuizService::QuiztoQuizDTO).toList();
     }
 
     public QuizMetadataDTO getQuizByQuizId(UUID quizId) {
-
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Cannot find Quiz with quiz id: " + quizId));
-
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
         return QuiztoQuizDTO(quiz);
-
     }
 
     public List<QuizMetadataDTO> getQuizByTeacherId(UUID teacherId) {
-
         Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with teacher id: " + teacherId));
-
+                .orElseThrow(() -> new TeacherNotFoundException("Teacher not found with teacher id: " + teacherId));
         List<Quiz> quizList = quizRepository.findByCreatedBy(teacher);
-
-        return quizList.stream()
-                .map(QuizService::QuiztoQuizDTO)
-                .toList();
-
+        return quizList.stream().map(QuizService::QuiztoQuizDTO).toList();
     }
 
     public QuizMetadataDTO updateQuiz(UUID quizId, UpdateQuizRequestDTO request) {
-
-        System.out.println(request.getGrade());
-
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Cannot find Quiz with quiz id: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         quiz.setUpdatedAt(Timestamp.from(Instant.now()));
         quiz.setGrade(request.getGrade());
@@ -83,34 +67,29 @@ public class QuizService {
         quiz.setDeadline(request.getDeadline());
 
         return QuiztoQuizDTO(quizRepository.save(quiz));
-
     }
 
     public void deleteQuiz(UUID quizId) {
-
         quizRepository.deleteById(quizId);
-
     }
 
     public void submitQuiz(UUID quizId, QuizSubmissionRequestDTO request) {
-
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Cannot find Quiz with quiz id: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         UUID studentId = request.getStudentId();
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Cannot find student with student id: " +  studentId));
+                .orElseThrow(() -> new StudentNotFoundException("Student not found with student id: " + studentId));
 
         int maxScore = 0, score = 0;
 
-        for(AnswerDTO answer: request.getAnswers()) {
-
+        for (AnswerDTO answer : request.getAnswers()) {
             Question question = questionRepository.findById(answer.getQuestionId())
-                    .orElseThrow(() -> new RuntimeException("Cannot find Question with question id: " + answer.getQuestionId()));
+                    .orElseThrow(() -> new QuestionNotFoundException("Question not found with question id: " + answer.getQuestionId()));
 
             maxScore++;
-            if(Objects.equals(answer.getSelectedOption(), question.getCorrectOption())) score++;
+            if (Objects.equals(answer.getSelectedOption(), question.getCorrectOption())) score++;
 
             QuizStudentEvaluation evaluation = new QuizStudentEvaluation();
             evaluation.setStudentId(studentId);
@@ -120,7 +99,6 @@ public class QuizService {
             evaluation.setSubmittedAt(Timestamp.from(Instant.now()));
 
             quizStudentEvaluationRepository.save(evaluation);
-
         }
 
         QuizSubmission quizSubmission = new QuizSubmission();
@@ -131,7 +109,6 @@ public class QuizService {
         quizSubmission.setSubmittedAt(Timestamp.from(Instant.now()));
 
         quizSubmissionRepository.save(quizSubmission);
-
     }
 
     public static QuizMetadataDTO QuiztoQuizDTO(Quiz quiz) {
@@ -147,12 +124,10 @@ public class QuizService {
         return dto;
     }
 
-
     public List<GeneratedQuestionsDTO> generateQuiz(CreateQuizRequestDTO request) {
-
         UUID teacherId = request.getTeacherId();
         Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new RuntimeException("Teacher not found with teacher id: " + teacherId));
+                .orElseThrow(() -> new TeacherNotFoundException("Teacher not found with teacher id: " + teacherId));
 
         Quiz quiz = new Quiz();
         quiz.setCreatedBy(teacher);
@@ -163,12 +138,12 @@ public class QuizService {
         quiz.setGrade(request.getGrade());
         quiz.setDeadline(request.getDeadline());
 
-        Quiz response = quizRepository.save(quiz);
+        quizRepository.save(quiz);
 
-        List<GeneratedQuestionsDTO> questions = questionService.generateQuizQuestion(request.getGrade().toString(), request.getSubject(), request.getTopic(), request.getNumOfQuestions());
+        List<GeneratedQuestionsDTO> questions = questionService.generateQuizQuestion(
+                request.getGrade().toString(), request.getSubject(), request.getTopic(), request.getNumOfQuestions());
 
-        for(GeneratedQuestionsDTO question: questions) {
-
+        for (GeneratedQuestionsDTO question : questions) {
             Question q = new Question();
             q.setQuiz(quiz);
             q.setQuestionText(question.getQuestionText());
@@ -185,12 +160,11 @@ public class QuizService {
         }
 
         return questions;
-
     }
 
     public QuizAnalysisResponseDTO getQuizAnalysisByQuiz(UUID quizId) {
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         List<QuizSubmission> submissions = quizSubmissionRepository.findAllByQuiz(quiz);
 
@@ -233,7 +207,7 @@ public class QuizService {
     public List<QuizSubmissionAnalysisDTO> getAllSubmissionsForQuiz(UUID quizId) {
 
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         List<QuizSubmissionAnalysisDTO> response = new ArrayList<>();
 
@@ -255,10 +229,10 @@ public class QuizService {
     public StudentQuizAnalysisDTO getSubmissionForQuiz(UUID studentId, UUID quizId) {
 
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with studentId: " + studentId));
+                .orElseThrow(() -> new StudentNotFoundException("Student not found with student id: " + studentId));
 
         StudentQuizAnalysisDTO response = new StudentQuizAnalysisDTO();
         response.setStudentId(studentId);
@@ -294,7 +268,7 @@ public class QuizService {
         response.setQuizId(quizId);
 
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with quizId: " + quizId));
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
 
         response.setActive(quiz.getDeadline().after(Timestamp.from(Instant.now())));
 
