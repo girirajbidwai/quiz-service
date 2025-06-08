@@ -140,8 +140,15 @@ public class QuizService {
 
         quizRepository.save(quiz);
 
-        List<GeneratedQuestionsDTO> questions = questionService.generateQuizQuestion(
-                request.getGrade().toString(), request.getSubject(), request.getTopic(), request.getNumOfQuestions());
+        List<GeneratedQuestionsDTO> questions;
+        try {
+            questions = questionService.generateQuizQuestion(
+                    request.getGrade().toString(), request.getSubject(), request.getTopic(), request.getNumOfQuestions()
+            );
+        } catch (Exception e) {
+            quizRepository.delete(quiz);
+            throw new RuntimeException("Quiz generation failed, quiz record removed: " + e.getMessage(), e);
+        }
 
         for (GeneratedQuestionsDTO question : questions) {
             Question q = new Question();

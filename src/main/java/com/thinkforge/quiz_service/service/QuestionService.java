@@ -19,7 +19,6 @@ public class QuestionService {
         List<GeneratedQuestionsDTO> questions = null;
 
         try {
-            // Now that generate.py is in the root folder, use a direct path
             String scriptPath = Paths.get("generate.py").toString();
 
             ProcessBuilder pb = new ProcessBuilder(
@@ -29,7 +28,7 @@ public class QuestionService {
             );
 
             pb.redirectErrorStream(true);
-            pb.directory(new java.io.File(".")); // Ensures it runs from root/project working dir
+            pb.directory(new java.io.File("."));
 
             Process process = pb.start();
 

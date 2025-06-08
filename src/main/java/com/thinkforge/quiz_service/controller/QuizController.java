@@ -4,6 +4,7 @@ import com.thinkforge.quiz_service.dto.*;
 import com.thinkforge.quiz_service.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,7 @@ public class QuizController {
     @Operation(summary = "Generate quiz", description = "Generates quiz questions based on input details such as subject, grade, and topic.")
     @ApiResponse(responseCode = "200", description = "Quiz generated successfully with list of questions")
     @PostMapping("/generate")
-    public ResponseEntity<List<GeneratedQuestionsDTO>> generateQuiz(@RequestBody CreateQuizRequestDTO request) {
+    public ResponseEntity<List<GeneratedQuestionsDTO>> generateQuiz(@Valid @RequestBody CreateQuizRequestDTO request) {
         return ResponseEntity.ok(quizService.generateQuiz(request));
     }
 
@@ -53,7 +54,7 @@ public class QuizController {
     @PutMapping("/{quizId}")
     public ResponseEntity<QuizMetadataDTO> updateQuiz(
             @PathVariable UUID quizId,
-            @RequestBody UpdateQuizRequestDTO request) {
+            @Valid @RequestBody UpdateQuizRequestDTO request) {
         return ResponseEntity.ok(quizService.updateQuiz(quizId, request));
     }
 
@@ -72,7 +73,7 @@ public class QuizController {
     @PostMapping("/{quizId}/submit")
     public ResponseEntity<String> submitQuiz(
             @PathVariable UUID quizId,
-            @RequestBody QuizSubmissionRequestDTO request) {
+            @Valid @RequestBody QuizSubmissionRequestDTO request) {
         quizService.submitQuiz(quizId, request);
         return ResponseEntity.ok("Quiz submitted successfully");
     }
