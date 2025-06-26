@@ -42,6 +42,11 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizByTeacherId(teacherId));
     }
 
+    @GetMapping("/{quizId}/questions")
+    public ResponseEntity<QuizQuestionResponseDTO> getQuizQuestions(@PathVariable UUID quizId) {
+        return ResponseEntity.ok(quizService.getQuizQuestions(quizId));
+    }
+
     @Operation(summary = "Generate quiz", description = "Generates quiz questions based on input details such as subject, grade, and topic.")
     @ApiResponse(responseCode = "200", description = "Quiz generated successfully with list of questions")
     @PostMapping("/generate")

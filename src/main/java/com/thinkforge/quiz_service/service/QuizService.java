@@ -296,4 +296,38 @@ public class QuizService {
         return response;
 
     }
+
+    public QuizQuestionResponseDTO getQuizQuestions(UUID quizId) {
+
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with quiz id: " + quizId));
+
+        List<Question> questionList = questionRepository.findByQuiz(quiz);
+
+        List<QuestionDTO> questions = new ArrayList<>();
+        for(Question question: questionList) {
+            QuestionDTO questionDTO = new QuestionDTO();
+            questionDTO.setQuestionId(question.getQuestionId());
+            questionDTO.setQuizId(question.getQuiz().getQuizId());
+            questionDTO.setQuestionText(question.getQuestionText());
+            questionDTO.setMarks(question.getMarks());
+            questionDTO.setNegativeMarks(question.getNegativeMarks());
+            questionDTO.setOptionA(question.getOptionA());
+            questionDTO.setOptionB(question.getOptionB());
+            questionDTO.setOptionC(question.getOptionC());
+            questionDTO.setOptionD(question.getOptionD());
+            questionDTO.setCorrectOption(question.getCorrectOption());
+            questionDTO.setHint(question.getHint());
+
+            questions.add(questionDTO);
+        }
+
+        QuizQuestionResponseDTO response = new QuizQuestionResponseDTO();
+        Integer numOfQuestions = questions.size();
+        response.setNumOfQuestions(numOfQuestions);
+        response.setQuestions(questions);
+
+        return response;
+
+    }
 }
