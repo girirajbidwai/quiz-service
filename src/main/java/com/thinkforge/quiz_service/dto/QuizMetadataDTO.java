@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
-public class QuizDTO {
+public class QuizMetadataDTO {
     private UUID quizId;
     private UUID createdBy;
     private Timestamp createdAt;

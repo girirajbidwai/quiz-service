@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class GetQuestionsDTO {
+public class GeneratedQuestionsDTO {
 
     @NotBlank
     private String questionText;

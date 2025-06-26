@@ -2,7 +2,7 @@ package com.thinkforge.quiz_service.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thinkforge.quiz_service.dto.GetQuestionsDTO;
+import com.thinkforge.quiz_service.dto.GeneratedQuestionsDTO;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -14,12 +14,11 @@ import java.util.List;
 @Service
 public class QuestionService {
 
-    List<GetQuestionsDTO> generateQuizQuestion(String grade, String subject, String topic, int numQuestions) {
+    List<GeneratedQuestionsDTO> generateQuizQuestion(String grade, String subject, String topic, int numQuestions) {
 
-        List<GetQuestionsDTO> questions = null;
+        List<GeneratedQuestionsDTO> questions = null;
 
         try {
-            // Now that generate.py is in the root folder, use a direct path
             String scriptPath = Paths.get("generate.py").toString();
 
             ProcessBuilder pb = new ProcessBuilder(
@@ -29,7 +28,7 @@ public class QuestionService {
             );
 
             pb.redirectErrorStream(true);
-            pb.directory(new java.io.File(".")); // Ensures it runs from root/project working dir
+            pb.directory(new java.io.File("."));
 
             Process process = pb.start();
 
